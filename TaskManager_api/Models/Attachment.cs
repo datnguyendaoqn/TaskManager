@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TaskManager_api.Models
 {
@@ -7,9 +8,13 @@ namespace TaskManager_api.Models
         public int AttachmentId { get; set; }
 
         public int TaskId { get; set; }
+        [JsonIgnore]
+
         public TaskItem Task { get; set; } = null!;
 
         public int UserId { get; set; }
+        [JsonIgnore]
+
         public User User { get; set; } = null!;
 
         [MaxLength(500)]

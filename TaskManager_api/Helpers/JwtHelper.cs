@@ -15,13 +15,13 @@ namespace TaskManager_api.Helpers
             _key = key;
         }
 
-        public string GenerateToken(User user, string role, int expireMinutes = 60)
+        public string GenerateToken(User user, int expireMinutes = 60)
         {
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(ClaimTypes.Role, user.SystemRole)
             };
 
             var keyBytes = Encoding.UTF8.GetBytes(_key);

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TaskManager_api.Models
 {
@@ -7,6 +8,8 @@ namespace TaskManager_api.Models
         public int TagId { get; set; }
 
         public int ProjectId { get; set; }
+        [JsonIgnore]
+
         public Project Project { get; set; } = null!;
 
         [MaxLength(100)]
@@ -17,6 +20,7 @@ namespace TaskManager_api.Models
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        [JsonIgnore]
 
         // Navigation
         public ICollection<TaskTag> TaskTags { get; set; } = new List<TaskTag>();

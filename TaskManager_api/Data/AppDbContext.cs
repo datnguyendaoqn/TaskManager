@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TaskManager_api.Models;
+using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
+using TaskManager_api.Models;
 
 namespace TaskManager_api.Data
 {
@@ -20,6 +21,8 @@ namespace TaskManager_api.Data
         public DbSet<Tag> Tags => Set<Tag>();
         public DbSet<TaskTag> TaskTags => Set<TaskTag>();
 
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
         protected override void OnModelCreating(ModelBuilder model)
         {
             base.OnModelCreating(model);
@@ -35,6 +38,8 @@ namespace TaskManager_api.Data
             model.Entity<Attachment>().ToTable("attachment");
             model.Entity<Tag>().ToTable("tag");
             model.Entity<TaskTag>().ToTable("task_tag");
+            model.Entity<RefreshToken>().ToTable("refresh_token");
+
 
             // --- Keys ---
             model.Entity<User>().HasKey(x => x.UserId);
@@ -45,12 +50,19 @@ namespace TaskManager_api.Data
             model.Entity<Comment>().HasKey(x => x.CommentId);
             model.Entity<Attachment>().HasKey(x => x.AttachmentId);
             model.Entity<Tag>().HasKey(x => x.TagId);
+            model.Entity<RefreshToken>().HasKey(x=>x.Id);
 
             // Composite keys
             model.Entity<ProjectUser>().HasKey(x => new { x.ProjectId, x.UserId });
             model.Entity<TaskTag>().HasKey(x => new { x.TaskId, x.TagId });
 
             // --- Relationships ---
+                model.Entity<RefreshToken>()
+             .HasOne(rt => rt.User)
+             .WithMany(u => u.RefreshTokens)
+             .HasForeignKey(rt => rt.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
             model.Entity<Project>()
                 .HasOne(p => p.CreatedByUser)
                 .WithMany()
@@ -147,9 +159,17 @@ namespace TaskManager_api.Data
                 .HasForeignKey(tt => tt.TagId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // --- Unique & lengt   h rules ---
+            // --- Unique & length rules ---
             model.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
+
+            // --- Set default value -----
+            model.Entity<Project>()
+                .Property(p => p.CreatedAt)
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+            model.Entity<ProjectUser>()
+                .Property(pu => pu.CreatedAt)
+                .HasDefaultValueSql("SYSUTCDATETIME()");
             // --- (Optional) Tự động snake_case cột/constraint/index ---
             ToSnakeCaseAll(model);
         }

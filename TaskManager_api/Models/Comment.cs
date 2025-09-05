@@ -1,13 +1,19 @@
-﻿namespace TaskManager_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace TaskManager_api.Models
 {
     public class Comment
     {
         public int CommentId { get; set; }
 
         public int TaskId { get; set; }
+        [JsonIgnore]
+
         public TaskItem Task { get; set; } = null!;
 
         public int UserId { get; set; }
+        [JsonIgnore]
+
         public User User { get; set; } = null!;
 
         public string Content { get; set; } = null!;

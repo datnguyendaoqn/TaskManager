@@ -94,12 +94,6 @@ namespace TaskManager_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_id");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("type");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
@@ -132,8 +126,8 @@ namespace TaskManager_api.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("name");
 
                     b.Property<int>("Position")
@@ -205,8 +199,10 @@ namespace TaskManager_api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProjectId"));
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int")
@@ -246,12 +242,10 @@ namespace TaskManager_api.Migrations
                         .HasColumnName("user_id");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("joined_at");
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -270,6 +264,51 @@ namespace TaskManager_api.Migrations
                         .HasDatabaseName("ix_project_user_user_id");
 
                     b.ToTable("project_user", (string)null);
+                });
+
+            modelBuilder.Entity("TaskManager_api.Models.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("device_id");
+
+                    b.Property<string>("DeviceName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("device_name");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("expires");
+
+                    b.Property<DateTime?>("Revoked")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("revoked");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("token");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_token");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_refresh_token_user_id");
+
+                    b.ToTable("refresh_token", (string)null);
                 });
 
             modelBuilder.Entity("TaskManager_api.Models.Tag", b =>
@@ -331,7 +370,7 @@ namespace TaskManager_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("board_id");
 
-                    b.Property<int?>("ColumnId")
+                    b.Property<int>("ColumnId")
                         .HasColumnType("int")
                         .HasColumnName("column_id");
 
@@ -355,11 +394,6 @@ namespace TaskManager_api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("priority");
-
-                    b.Property<string>("Status")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("status");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -425,6 +459,16 @@ namespace TaskManager_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("avatar_url");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("bio");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
@@ -446,6 +490,12 @@ namespace TaskManager_api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("password_hash");
+
+                    b.Property<string>("SystemRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("system_role");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -560,6 +610,18 @@ namespace TaskManager_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskManager_api.Models.RefreshToken", b =>
+                {
+                    b.HasOne("TaskManager_api.Models.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_token_user_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TaskManager_api.Models.Tag", b =>
                 {
                     b.HasOne("TaskManager_api.Models.Project", "Project")
@@ -591,6 +653,7 @@ namespace TaskManager_api.Migrations
                         .WithMany("Tasks")
                         .HasForeignKey("ColumnId")
                         .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
                         .HasConstraintName("fk_task_board_column_column_id");
 
                     b.HasOne("TaskManager_api.Models.User", "CreatedByUser")
@@ -672,6 +735,8 @@ namespace TaskManager_api.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("ProjectUsers");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("TasksAssigned");
 

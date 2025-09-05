@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TaskManager_api.DTOs;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using TaskManager_api.DTOs.Auth;
+using TaskManager_api.DTOs.User;
 using TaskManager_api.Helpers;
 using TaskManager_api.Models;
-using TaskManager_api.Services;
+using TaskManager_api.Services.Users;
 
 namespace TaskManager_api.Controllers
 {
@@ -18,58 +21,40 @@ namespace TaskManager_api.Controllers
             _service = service;
             _jwtHelper = jwtHelper;
         }
-
-        [HttpPost("register")]
-        public async Task<ActionResult<User>> Register(UserCreateDto dto)
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
         {
-            try
-            {
-                var user = await _service.RegisterAsync(dto);
-                return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var profile = await _service.GetProfileAsync(id);
+            if (profile == null) return NotFound();
+
+            return Ok(profile);
+        }
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(UserUpdateDto dto)
+        {
+            int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _service.UpdateProfileAsync(id,dto);
+            return NoContent();
+        }
+        [HttpPut("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDTO dto)
+        {
+            int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _service.ChangePasswordAsync(id, dto);
+            return NoContent();
         }
 
-        [HttpPost("login")]
-        public async Task<ActionResult> Login(UserLoginDto dto)
-        {
-            var user = await _service.AuthenticateAsync(dto);
-            if (user == null) return Unauthorized();
 
-            // Tạm hardcode role = "User" (sau có thể lấy từ DB)
-            var token = _jwtHelper.GenerateToken(user, "User");
-            return Ok(new { token });
-        }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetAll()
-        {
-            var users = await _service.GetAllAsync();
-            return Ok(users);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetById(int id)
-        {
-            var user = await _service.GetByIdAsync(id);
-            if (user == null) return NotFound();
-            return Ok(user);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<User>> Update(int id, UserUpdateDto dto)
-        {
-            var user = await _service.UpdateAsync(id, dto);
-            if (user == null) return NotFound();
-            return Ok(user);
-        }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult> Delete()
         {
+            int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var deleted = await _service.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
