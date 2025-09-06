@@ -1,4 +1,5 @@
-﻿using TaskManager_api.DTOs.BoardColumn;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManager_api.DTOs.BoardColumn;
 using TaskManager_api.Models;
 using TaskManager_api.Repositories.BoardColumns;
 
@@ -15,11 +16,14 @@ namespace TaskManager_api.Services.BoardColumns
 
         public async Task<BoardColumnResponseDTO> AddColumnAsync(int boardId, BoardColumnCreateDTO dto)
         {
+            // Lấy max position hiện tại trong board
+            var maxPosition = await _columnRepo.GetMaxPositionAsync(boardId);
+
             var column = new BoardColumn
             {
                 BoardId = boardId,
                 Name = dto.Name,
-                Position = dto.Position,
+                Position = maxPosition + 1,  // tự động thêm vào cuối
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -41,7 +45,21 @@ namespace TaskManager_api.Services.BoardColumns
             if (column == null) return false;
 
             column.Name = dto.Name;
-            column.Position = dto.Position;
+
+            if (dto.Position.HasValue && dto.Position.Value != column.Position)
+            {
+                // Lấy column đang chiếm vị trí mới
+                var targetColumn = await _columnRepo.GetByBoardIdAndPositionAsync(column.BoardId, dto.Position.Value);
+                if (targetColumn != null)
+                {
+                    // Swap position
+                    targetColumn.Position = column.Position;
+                    targetColumn.UpdatedAt = DateTime.UtcNow;
+                }
+
+                column.Position = dto.Position.Value;
+            }
+
             column.UpdatedAt = DateTime.UtcNow;
 
             await _columnRepo.SaveChangesAsync();
@@ -56,6 +74,14 @@ namespace TaskManager_api.Services.BoardColumns
             column.IsArchived = true;
             column.UpdatedAt = DateTime.UtcNow;
 
+            // Shift các column còn lại để lấp khoảng trống
+            var boardColumns = await _columnRepo.GetByBoardIdAsync(column.BoardId, includeArchived: false);
+            foreach (var c in boardColumns)
+            {
+                if (c.Position > column.Position)
+                    c.Position -= 1;
+            }
+
             await _columnRepo.SaveChangesAsync();
             return true;
         }
@@ -68,6 +94,10 @@ namespace TaskManager_api.Services.BoardColumns
             column.IsArchived = false;
             column.UpdatedAt = DateTime.UtcNow;
 
+            // Thêm vào cuối cùng position
+            var maxPosition = await _columnRepo.GetMaxPositionAsync(column.BoardId);
+            column.Position = maxPosition + 1;
+
             await _columnRepo.SaveChangesAsync();
             return true;
         }
@@ -77,11 +107,35 @@ namespace TaskManager_api.Services.BoardColumns
             var column = await _columnRepo.GetByIdAsync(columnId, includeArchived: true);
             if (column == null) return false;
 
+            // Shift các column còn lại nếu không archive
+            if (!column.IsArchived)
+            {
+                var boardColumns = await _columnRepo.GetByBoardIdAsync(column.BoardId, includeArchived: false);
+                foreach (var c in boardColumns)
+                {
+                    if (c.Position > column.Position)
+                        c.Position -= 1;
+                }
+            }
+
             await _columnRepo.RemoveAsync(column);
             await _columnRepo.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<BoardColumnResponseDTO>> GetArchivedColumnsAsync(int boardId)
+        {
+            var columns = await _columnRepo.GetArchivedByBoardIdAsync(boardId);
+            return columns.Select(c => new BoardColumnResponseDTO
+            {
+                ColumnId = c.ColumnId,
+                Name = c.Name,
+                Position = c.Position,
+                IsArchived = c.IsArchived
+            });
+        }
     }
-
-
 }
+
+
+    

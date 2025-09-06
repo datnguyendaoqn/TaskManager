@@ -2,37 +2,42 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManager_api.DTOs.Project;
+using TaskManager_api.DTOs.ProjectUser;
 using TaskManager_api.Services.Projects;
+using TaskManager_api.Services.ProjectUsers;
 
 namespace TaskManager_api.Controllers
 {
-    // Controllers/ProjectController.cs
     [ApiController]
     [Route("api/[controller]")]
-    public class ProjectController : ControllerBase
+    public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _service;
+        private readonly IProjectUserService _projectUserService;
 
-        public ProjectController(IProjectService service)
+        public ProjectsController(IProjectService service, IProjectUserService projectUserService)
         {
             _service = service;
+            _projectUserService = projectUserService;
         }
+
         /// <summary>
-        /// Tạo mới 1 project
+        /// Tạo mới project
         /// </summary>
+        /// <param name="dto">Dữ liệu project</param>
+        /// <returns>Project vừa tạo</returns>
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Create([FromBody]ProjectCreateDTO dto)
+        public async Task<IActionResult> Create([FromBody] ProjectCreateDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var result = await _service.CreateProjectAsync(dto, userId);
-            return Ok(result);
+            return CreatedAtAction(nameof(GetById), new { projectId = result.ProjectId }, result);
         }
+
         /// <summary>
-        /// Lấy danh sách project của user hiện tại.
+        /// Lấy danh sách project của user hiện tại
         /// </summary>
-        /// <response code="200">Danh sách project</response>
-        /// <response code="401">Chưa đăng nhập hoặc token sai</response>
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetUserProjects()
@@ -41,42 +46,72 @@ namespace TaskManager_api.Controllers
             var projects = await _service.GetProjectsOfUserAsync(userId);
             return Ok(projects);
         }
+
         /// <summary>
-        /// Lấy thông tin của 1 project - những người tham gia project 
+        /// Lấy thông tin project theo ID
         /// </summary>
-        [HttpGet("{id}")]
+        [HttpGet("{projectId}")]
         [Authorize]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int projectId)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var project = await _service.GetProjectByIdAsync(id, userId);
+            var project = await _service.GetProjectByIdAsync(projectId, userId);
             if (project == null) return Forbid();
             return Ok(project);
         }
+
         /// <summary>
-        /// Cập nhật thông tin project
+        /// Cập nhật thông tin project (partial update)
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPatch("{projectId}")]
         [Authorize]
-        public async Task<IActionResult> Update(int id,[FromBody]ProjectUpdateDTO dto)
+        public async Task<IActionResult> Update(int projectId, [FromBody] ProjectUpdateDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var result = await _service.UpdateProjectAsync(id, dto, userId);
+            var result = await _service.UpdateProjectAsync(projectId, dto, userId);
             if (result == null) return Forbid();
             return Ok(result);
         }
+
         /// <summary>
         /// Xóa project
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("{projectId}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int projectId)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var success = await _service.DeleteProjectAsync(id, userId);
+            var success = await _service.DeleteProjectAsync(projectId, userId);
+            if (!success) return Forbid();
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Thêm user vào project
+        /// </summary>
+        [HttpPost("{projectId}/users")]
+        [Authorize]
+        public async Task<IActionResult> AddUser(int projectId, [FromBody] ProjectUserAddDTO dto)
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var success = await _projectUserService.AddUserToProjectAsync(projectId, currentUserId, dto);
+            if (!success) return Forbid();
+            return Ok();
+        }
+
+        /// <summary>
+        /// Xóa user khỏi project
+        /// </summary>
+        [HttpDelete("{projectId}/users/{userId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveUser(int projectId, int userId)
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var success = await _projectUserService.RemoveUserFromProjectAsync(projectId, currentUserId, userId);
             if (!success) return Forbid();
             return NoContent();
         }
     }
+
 
 }

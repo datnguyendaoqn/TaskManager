@@ -7,6 +7,7 @@ namespace TaskManager_api.Services.Boards
         Task<BoardResponseDTO> CreateBoardAsync(int projectId, int userId, BoardCreateDTO dto);
         Task<BoardResponseDTO?> GetBoardDetailAsync(int boardId, bool includeArchived = false);
         Task<IEnumerable<BoardResponseDTO>> GetBoardsOfProjectAsync(int projectId, bool includeArchived = false);
+        Task<IEnumerable<BoardResponseDTO>> GetArchivedBoardsAsync(int projectId);
         Task<bool> ArchiveBoardAsync(int boardId, int userId);
         Task<bool> UnarchiveBoardAsync(int boardId, int userId);
         Task<bool> DeleteBoardPermanentlyAsync(int boardId, int userId);

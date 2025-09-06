@@ -21,6 +21,9 @@ namespace TaskManager_api.Controllers
             _service = service;
             _jwtHelper = jwtHelper;
         }
+        /// <summary>
+        /// Lấy thông tin user
+        /// </summary>
         [HttpGet("profile")]
         [Authorize]
         public async Task<IActionResult> GetProfile()
@@ -31,7 +34,10 @@ namespace TaskManager_api.Controllers
 
             return Ok(profile);
         }
-        [HttpPut("profile")]
+        /// <summary>
+        /// Cập nhật thông tin user
+        /// </summary>
+        [HttpPatch("profile")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(UserUpdateDto dto)
         {
@@ -39,7 +45,10 @@ namespace TaskManager_api.Controllers
             await _service.UpdateProfileAsync(id,dto);
             return NoContent();
         }
-        [HttpPut("change-password")]
+        /// <summary>
+        /// Cập nhật mật khấu
+        /// </summary>
+        [HttpPatch("change-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO dto)
         {
@@ -47,10 +56,9 @@ namespace TaskManager_api.Controllers
             await _service.ChangePasswordAsync(id, dto);
             return NoContent();
         }
-
-
-
-
+        /// <summary>
+        /// Xóa user
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete()
         {

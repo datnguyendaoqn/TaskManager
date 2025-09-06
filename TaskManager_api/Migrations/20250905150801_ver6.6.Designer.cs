@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManager_api.Data;
 
@@ -11,9 +12,11 @@ using TaskManager_api.Data;
 namespace TaskManager_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250905150801_ver6.6")]
+    partial class ver66
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -402,10 +405,6 @@ namespace TaskManager_api.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("is_archived");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("int")
-                        .HasColumnName("position");
-
                     b.Property<string>("Priority")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
@@ -417,7 +416,7 @@ namespace TaskManager_api.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("title");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
 

@@ -57,6 +57,11 @@ namespace TaskManager_api.Services.Boards
             await _boardRepo.SaveChangesAsync();
             return true;
         }
+        public async Task<IEnumerable<BoardResponseDTO>> GetArchivedBoardsAsync(int projectId)
+        {
+            var boards = await _boardRepo.GetArchivedByProjectIdAsync(projectId);
+            return boards.Select(MapToResponse);
+        }
 
         public async Task<bool> UnarchiveBoardAsync(int boardId, int userId)
         {
