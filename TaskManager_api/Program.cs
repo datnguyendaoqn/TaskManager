@@ -42,10 +42,12 @@ namespace TaskManager_api
             });
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             // Database context
+            //builder.Services.AddDbContext<AppDbContext>(options =>
+            //   options.UseSqlServer(builder.Configuration.GetConnectionString("DBCONNECTION")));
             builder.Services.AddDbContext<AppDbContext>(options =>
-               options.UseSqlServer(builder.Configuration.GetConnectionString("DBCONNECTION")));
+             options.UseInMemoryDatabase("TaskManagerInMemoryDb"));
             // Đăng ký DbContext với connection từ .env
-           // builder.Services.AddDbContext<AppDbContext>(options =>
+            // builder.Services.AddDbContext<AppDbContext>(options =>
             //    options.UseSqlServer(Environment.GetEnvironmentVariable("DB_CONNECTION")));
 
             // Repository & Service DI
@@ -65,13 +67,19 @@ namespace TaskManager_api
             builder.Services.AddScoped<ITaskService, TaskService>();
 
             // Jwt Helper DI (Singleton)
-            builder.Services.AddSingleton<JwtHelper>(new JwtHelper(
-                builder.Configuration["Jwt:Key"] ?? "super-secret-key"
-            ));
+            //builder.Services.AddSingleton<JwtHelper>(new JwtHelper(
+            //    builder.Configuration["Jwt:Key"] ?? "super-secret-key"
+            //));
 
-            // ===== Authentication (JWT) =====
-            // Cần using Microsoft.AspNetCore.Authentication.JwtBearer;
-            var jwtKey = builder.Configuration["Jwt:Key"] ?? "super-secret-key";
+            //// ===== Authentication (JWT) =====
+            //// Cần using Microsoft.AspNetCore.Authentication.JwtBearer;
+            //var jwtKey = builder.Configuration["Jwt:Key"] ?? "my_super_secret_key_for_jwt_2025_demo!123";
+         
+            var jwtKey = builder.Configuration["Jwt:Key"]
+              ?? Environment.GetEnvironmentVariable("JWT_KEY")
+              ?? "my_super_secret_key_for_jwt_2025_demo!123";
+
+            builder.Services.AddSingleton<JwtHelper>(new JwtHelper(jwtKey));
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -95,21 +103,15 @@ namespace TaskManager_api
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                if (db.Database.CanConnect())
-                {
-                    Console.WriteLine("✅ Database connected successfully!");
-                }
-                else
-                {
-                    Console.WriteLine("❌ Failed to connect to database.");
-                }
+                db.Database.EnsureCreated(); // Tạo schema cho In-Memory DB
+                Console.WriteLine("✅ In-Memory Database created successfully!");
             }
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+            }
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
 
             app.UseHttpsRedirection();
 

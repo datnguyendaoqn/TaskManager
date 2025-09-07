@@ -20,6 +20,8 @@ namespace TaskManager_api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
             try
             {
                 await _authService.RegisterAsync(dto);
