@@ -1,0 +1,10 @@
+﻿
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "dotnet TaskManager_api.dll"
+healthcheckPath = "/swagger"
+
+[env]
+PORT = "8080"
