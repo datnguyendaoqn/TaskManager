@@ -52,9 +52,9 @@ namespace TaskManager_api.Services.Tasks
 
         private async Task<int> GetNextPositionAsync(int columnId)
         {
-            return (await _context.Tasks
-                .Where(t => t.ColumnId == columnId && !t.IsArchived)
-                .MaxAsync(t => (int?)t.Position)) ?? 0 + 1;
+            return ((await _context.Tasks
+                 .Where(t => t.ColumnId == columnId && !t.IsArchived)
+                 .MaxAsync(t => (int?)t.Position)) ?? 0) + 1;
         }
 
         private async Task<bool> HasProjectAccessAsync(int userId, int projectId) =>
@@ -128,18 +128,20 @@ namespace TaskManager_api.Services.Tasks
             int oldColumnId = task.ColumnId;
             int oldPosition = task.Position;
 
+            // --- Case: move sang cột khác ---
             if (dto.NewColumnId.HasValue && dto.NewColumnId.Value != task.ColumnId)
             {
                 int newColumnId = dto.NewColumnId.Value;
 
-                // Column cũ: reorder các task còn lại
+                // 1. Column cũ: reorder lại các task còn lại
                 var tasksInOldColumn = await _context.Tasks
                     .Where(t => t.ColumnId == oldColumnId && t.TaskId != task.TaskId && !t.IsArchived)
                     .OrderBy(t => t.Position)
                     .ToListAsync();
-                ReorderTasks(tasksInOldColumn);
+                ReorderTasks(tasksInOldColumn); // gán lại position = 1..N
+                _context.Tasks.UpdateRange(tasksInOldColumn);
 
-                // Column mới: lấy các task hiện tại
+                // 2. Column mới: lấy task chưa archive
                 var tasksInNewColumn = await _context.Tasks
                     .Where(t => t.ColumnId == newColumnId && !t.IsArchived)
                     .OrderBy(t => t.Position)
@@ -150,47 +152,56 @@ namespace TaskManager_api.Services.Tasks
                 {
                     newPos = Math.Clamp(dto.NewPosition.Value, 1, tasksInNewColumn.Count + 1);
 
-                    // Dịch các task từ vị trí chèn trở đi xuống 1
-                    foreach (var t in tasksInNewColumn.Where(t => t.Position >= newPos))
-                        t.Position++;
+                    // Chỉ dịch các task nếu chèn vào giữa
+                    if (newPos <= tasksInNewColumn.Count)
+                    {
+                        foreach (var t in tasksInNewColumn.Where(t => t.Position >= newPos))
+                            t.Position++;
+                        _context.Tasks.UpdateRange(tasksInNewColumn);
+                    }
                 }
                 else
                 {
-                    newPos = tasksInNewColumn.Count + 1;
+                    newPos = tasksInNewColumn.Count + 1; // chèn cuối cột mới
                 }
 
                 task.ColumnId = newColumnId;
                 task.Position = newPos;
-
-                _context.Tasks.UpdateRange(tasksInOldColumn);
-                _context.Tasks.UpdateRange(tasksInNewColumn);
             }
+            // --- Case: move trong cùng column ---
             else if (dto.NewPosition.HasValue && dto.NewPosition.Value != task.Position)
             {
-                // Trong cùng column: 
                 var tasksInColumn = await _context.Tasks
-             .Where(t => t.ColumnId == task.ColumnId && !t.IsArchived && t.TaskId != task.TaskId)
-             .OrderBy(t => t.Position)
-             .ToListAsync();
+                    .Where(t => t.ColumnId == task.ColumnId && t.TaskId != task.TaskId && !t.IsArchived)
+                    .OrderBy(t => t.Position)
+                    .ToListAsync();
 
                 int newPos = Math.Clamp(dto.NewPosition.Value, 1, tasksInColumn.Count + 1);
 
-                // Dịch các task từ vị trí chèn trở đi xuống 1
-                foreach (var t in tasksInColumn.Where(t => t.Position >= newPos))
-                    t.Position++;
+                if (newPos < oldPosition)
+                {
+                    // di chuyển lên đầu/middle: dịch các task >= newPos && < oldPosition xuống 1
+                    foreach (var t in tasksInColumn.Where(t => t.Position >= newPos && t.Position < oldPosition))
+                        t.Position++;
+                }
+                else if (newPos > oldPosition)
+                {
+                    // di chuyển xuống cuối/middle: dịch các task > oldPosition && <= newPos lên -1
+                    foreach (var t in tasksInColumn.Where(t => t.Position > oldPosition && t.Position <= newPos))
+                        t.Position--;
+                }
 
                 task.Position = newPos;
-
                 _context.Tasks.UpdateRange(tasksInColumn);
             }
 
             task.UpdatedAt = DateTime.UtcNow;
             _context.Tasks.Update(task);
-
             await _context.SaveChangesAsync();
 
             return _mapper.Map<TaskDTO>(task);
         }
+
 
 
 
