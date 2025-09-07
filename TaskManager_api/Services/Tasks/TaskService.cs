@@ -167,21 +167,21 @@ namespace TaskManager_api.Services.Tasks
             }
             else if (dto.NewPosition.HasValue && dto.NewPosition.Value != task.Position)
             {
-                // Trong cùng column: swap pos
+                // Trong cùng column: 
                 var tasksInColumn = await _context.Tasks
-                    .Where(t => t.ColumnId == task.ColumnId && !t.IsArchived && t.TaskId != task.TaskId)
-                    .ToListAsync();
+             .Where(t => t.ColumnId == task.ColumnId && !t.IsArchived && t.TaskId != task.TaskId)
+             .OrderBy(t => t.Position)
+             .ToListAsync();
 
-                int targetPos = Math.Clamp(dto.NewPosition.Value, 1, tasksInColumn.Count + 1);
+                int newPos = Math.Clamp(dto.NewPosition.Value, 1, tasksInColumn.Count + 1);
 
-                var taskAtTarget = tasksInColumn.FirstOrDefault(t => t.Position == targetPos);
-                if (taskAtTarget != null)
-                {
-                    taskAtTarget.Position = task.Position;
-                    _context.Tasks.Update(taskAtTarget);
-                }
+                // Dịch các task từ vị trí chèn trở đi xuống 1
+                foreach (var t in tasksInColumn.Where(t => t.Position >= newPos))
+                    t.Position++;
 
-                task.Position = targetPos;
+                task.Position = newPos;
+
+                _context.Tasks.UpdateRange(tasksInColumn);
             }
 
             task.UpdatedAt = DateTime.UtcNow;

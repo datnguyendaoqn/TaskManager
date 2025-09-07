@@ -11,6 +11,7 @@ namespace TaskManager_api.Services.Tasks
         Task<IEnumerable<TaskDTO>> GetTasksByBoardAsync(int boardId, int currentUserId);
         Task DeleteTaskAsync(int taskId, int currentUserId);
         Task<TaskDTO> UpdateTaskInfoAsync(int taskId, int currentUserId, TaskUpdateDTO dto);
+
         Task<TaskDTO> MoveTaskAsync(int taskId, int currentUserId, MoveTaskDTO dto);
         // Archive
         Task<TaskDTO> ArchiveTaskAsync(int taskId, int currentUserId);

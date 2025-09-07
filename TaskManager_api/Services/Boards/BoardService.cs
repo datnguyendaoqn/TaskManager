@@ -92,16 +92,7 @@ namespace TaskManager_api.Services.Boards
                 Name = board.Name,
                 CreatedAt = board.CreatedAt,
                 IsArchived = board.IsArchived,
-                Columns = board.Columns
-                    .Where(c => !c.IsArchived)
-                    .OrderBy(c => c.Position)
-                    .Select(c => new BoardColumnResponseDTO
-                    {
-                        ColumnId = c.ColumnId,
-                        Name = c.Name,
-                        Position = c.Position,
-                        IsArchived = c.IsArchived
-                    }).ToList()
+               
             };
         }
     }
