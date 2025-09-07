@@ -1,21 +1,48 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using TaskManager_api.Data;
 using TaskManager_api.DTOs.BoardColumn;
 using TaskManager_api.Models;
 using TaskManager_api.Repositories.BoardColumns;
+using TaskManager_api.Repositories.Boards;
+using TaskManager_api.Repositories.ProjectUsers;
 
 namespace TaskManager_api.Services.BoardColumns
 {
     public class BoardColumnService : IBoardColumnService
     {
         private readonly IBoardColumnRepository _columnRepo;
+        private readonly AppDbContext _context;
+        private readonly IProjectUserRepository _projectUserRepo;
+        private readonly IBoardRepository _boardRepository;
 
-        public BoardColumnService(IBoardColumnRepository columnRepo)
+        public BoardColumnService(IBoardColumnRepository columnRepo,AppDbContext context,IProjectUserRepository projectUserRepo,IBoardRepository boardRepo)
         {
             _columnRepo = columnRepo;
+            _context = context;
+            _projectUserRepo = projectUserRepo;
+            _boardRepository = boardRepo;
         }
-
-        public async Task<BoardColumnResponseDTO> AddColumnAsync(int boardId, BoardColumnCreateDTO dto)
+        public async Task<IEnumerable<BoardColumnResponseDTO>> GetColumnAsync(int boardId, int currentUser)
         {
+            var board = await _boardRepository.GetByIdAsync(boardId);
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, board.ProjectId))
+                throw new Exception("User has no access to this project");
+            var cols = await _columnRepo.GetByBoardIdAsync(boardId);
+            return cols.Select(c => new BoardColumnResponseDTO
+            {
+                ColumnId = c.ColumnId,
+                Name = c.Name,
+                Position = c.Position,
+            });
+
+        }
+        public async Task<BoardColumnResponseDTO> AddColumnAsync(int boardId, BoardColumnCreateDTO dto,int currentUser)
+        {
+            var board = await _boardRepository.GetByIdAsync(boardId);
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, board.ProjectId))
+                throw new Exception("User has no access to this project");
             // Lấy max position hiện tại trong board
             var maxPosition = await _columnRepo.GetMaxPositionAsync(boardId);
 
@@ -39,37 +66,66 @@ namespace TaskManager_api.Services.BoardColumns
             };
         }
 
-        public async Task<bool> UpdateColumnAsync(int columnId, BoardColumnCreateDTO dto)
+        public async Task<bool> UpdateColumnAsync(int columnId, BoardColumnCreateDTO dto,int currentUser)
+        {
+            
+            var column = await _columnRepo.GetByIdAsync(columnId);
+            if (column == null) return false;
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
+                throw new Exception("User has no access to this project");
+
+            column.Name = dto.Name;
+            column.UpdatedAt = DateTime.UtcNow;
+            _context.BoardColumns.Update(column);
+            await _columnRepo.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> MoveColumnAsync(int columnId, int pos,int currentUser)
         {
             var column = await _columnRepo.GetByIdAsync(columnId);
             if (column == null) return false;
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
+                throw new Exception("User has no access to this project");
 
-            column.Name = dto.Name;
+            var columns = (await _columnRepo.GetByBoardIdAsync(column.BoardId)).ToList();
+            int oldPos = column.Position;
+            int newPos = Math.Clamp(pos, 1, columns.Count);
 
-            if (dto.Position.HasValue && dto.Position.Value != column.Position)
+            if (oldPos == newPos) return true; // không thay đổi
+
+            foreach (var c in columns)
             {
-                // Lấy column đang chiếm vị trí mới
-                var targetColumn = await _columnRepo.GetByBoardIdAndPositionAsync(column.BoardId, dto.Position.Value);
-                if (targetColumn != null)
-                {
-                    // Swap position
-                    targetColumn.Position = column.Position;
-                    targetColumn.UpdatedAt = DateTime.UtcNow;
-                }
+                if (c.ColumnId == columnId) continue;
 
-                column.Position = dto.Position.Value;
+                if (oldPos < newPos)
+                {
+                    if (c.Position > oldPos && c.Position <= newPos) c.Position -= 1;
+                }
+                else
+                {
+                    if (c.Position >= newPos && c.Position < oldPos) c.Position += 1;
+                }
             }
 
+            column.Position = newPos;
             column.UpdatedAt = DateTime.UtcNow;
 
+            foreach (var c in columns)
+            {
+                _context.BoardColumns.Update(c);
+            }
+            _context.BoardColumns.Update(column);
+                
             await _columnRepo.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> ArchiveColumnAsync(int columnId)
+        public async Task<bool> ArchiveColumnAsync(int columnId,int currentUser)
         {
             var column = await _columnRepo.GetByIdAsync(columnId);
             if (column == null) return false;
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
+                throw new Exception("User has no access to this project");
 
             column.IsArchived = true;
             column.UpdatedAt = DateTime.UtcNow;
@@ -86,10 +142,12 @@ namespace TaskManager_api.Services.BoardColumns
             return true;
         }
 
-        public async Task<bool> UnarchiveColumnAsync(int columnId)
+        public async Task<bool> UnarchiveColumnAsync(int columnId,int currentUser)
         {
             var column = await _columnRepo.GetByIdAsync(columnId, includeArchived: true);
             if (column == null) return false;
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
+                throw new Exception("User has no access to this project");
 
             column.IsArchived = false;
             column.UpdatedAt = DateTime.UtcNow;
@@ -102,10 +160,12 @@ namespace TaskManager_api.Services.BoardColumns
             return true;
         }
 
-        public async Task<bool> DeleteColumnPermanentlyAsync(int columnId)
+        public async Task<bool> DeleteColumnPermanentlyAsync(int columnId,int currentUser)
         {
             var column = await _columnRepo.GetByIdAsync(columnId, includeArchived: true);
             if (column == null) return false;
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
+                throw new Exception("User has no access to this project");
 
             // Shift các column còn lại nếu không archive
             if (!column.IsArchived)
@@ -123,8 +183,11 @@ namespace TaskManager_api.Services.BoardColumns
             return true;
         }
 
-        public async Task<IEnumerable<BoardColumnResponseDTO>> GetArchivedColumnsAsync(int boardId)
+        public async Task<IEnumerable<BoardColumnResponseDTO>> GetArchivedColumnsAsync(int boardId,int currentUser)
         {
+            var board = await _boardRepository.GetByIdAsync(boardId);
+            if (!await _projectUserRepo.UserHasProjectAsync(currentUser, board.ProjectId))
+                throw new Exception("User has no access to this project");
             var columns = await _columnRepo.GetArchivedByBoardIdAsync(boardId);
             return columns.Select(c => new BoardColumnResponseDTO
             {

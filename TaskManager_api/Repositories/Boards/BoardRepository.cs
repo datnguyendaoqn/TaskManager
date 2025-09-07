@@ -20,7 +20,7 @@ namespace TaskManager_api.Repositories.Boards
 
         public async Task<Board?> GetByIdAsync(int boardId, bool includeArchived = false)
         {
-            var query = _context.Boards.Include(b => b.Columns).AsQueryable();
+            var query = _context.Boards.AsQueryable();
             if (!includeArchived) query = query.Where(b => !b.IsArchived);
             return await query.FirstOrDefaultAsync(b => b.BoardId == boardId);
         }
@@ -28,7 +28,6 @@ namespace TaskManager_api.Repositories.Boards
         public async Task<IEnumerable<Board>> GetByProjectIdAsync(int projectId, bool includeArchived = false)
         {
             var query = _context.Boards
-                .Include(b => b.Columns)
                 .Where(b => b.ProjectId == projectId);
             if (!includeArchived) query = query.Where(b => !b.IsArchived);
             return await query.ToListAsync();
@@ -36,7 +35,6 @@ namespace TaskManager_api.Repositories.Boards
         public async Task<IEnumerable<Board>> GetArchivedByProjectIdAsync(int projectId) 
         {
             return await _context.Boards
-                .Include(b => b.Columns)
                 .Where(b => b.ProjectId == projectId && b.IsArchived)
                 .ToListAsync();
         }

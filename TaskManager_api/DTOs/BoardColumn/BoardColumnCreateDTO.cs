@@ -6,6 +6,6 @@ namespace TaskManager_api.DTOs.BoardColumn
     {
         [Required, MaxLength(100)]
         public string Name { get; set; } = null!;
-        public int? Position { get; set; }
+       
     }
 }
