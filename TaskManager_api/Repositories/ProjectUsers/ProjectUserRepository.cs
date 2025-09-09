@@ -41,6 +41,18 @@ namespace TaskManager_api.Repositories.ProjectUsers
 
             return await query.CountAsync();
         }
+        public async Task<bool> UserHasProjectAsync(int userId, int projectId)
+        {
+            return await _context.ProjectUsers
+                .AnyAsync(pu => pu.ProjectId == projectId && pu.UserId == userId);
+        }
+
+        public async Task<string?> GetUserRoleInProjectAsync(int userId, int projectId)
+        {
+            var pu = await _context.ProjectUsers
+                .FirstOrDefaultAsync(pu => pu.ProjectId == projectId && pu.UserId == userId);
+            return pu?.Role;
+        }
 
     }
 

@@ -14,7 +14,9 @@ namespace TaskManager_api.Controllers
         {
             _authService = authService;
         }
-
+        /// <summary>
+        /// Đăng ký 
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
@@ -28,7 +30,9 @@ namespace TaskManager_api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
+        /// <summary>
+        /// Đăng nhập
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
@@ -45,7 +49,9 @@ namespace TaskManager_api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
+        /// <summary>
+        /// Tạo mới token JWT - dựa vào refreshtoken
+        /// </summary>
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(RefreshTokenDTO dto)
         {
@@ -59,7 +65,9 @@ namespace TaskManager_api.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
-
+        /// <summary>
+        /// logout - xóa token JWT
+        /// </summary>
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(RefreshTokenDTO dto)
         {

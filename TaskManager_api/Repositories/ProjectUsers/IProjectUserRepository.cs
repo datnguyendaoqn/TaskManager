@@ -9,6 +9,10 @@ namespace TaskManager_api.Repositories.ProjectUsers
         Task RemoveAsync(ProjectUser projectUser);
         Task SaveChangesAsync();
         Task<int> CountAsync(int projectId, string? role = null);
+        
+        Task<bool> UserHasProjectAsync(int userId, int projectId);
+        Task<string?> GetUserRoleInProjectAsync(int userId, int projectId);
+
 
     }
 

@@ -33,7 +33,13 @@ namespace TaskManager_api.Repositories.Boards
             if (!includeArchived) query = query.Where(b => !b.IsArchived);
             return await query.ToListAsync();
         }
-
+        public async Task<IEnumerable<Board>> GetArchivedByProjectIdAsync(int projectId) 
+        {
+            return await _context.Boards
+                .Include(b => b.Columns)
+                .Where(b => b.ProjectId == projectId && b.IsArchived)
+                .ToListAsync();
+        }
         public async Task RemoveAsync(Board board)
         {
             _context.Boards.Remove(board);

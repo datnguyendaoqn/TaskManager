@@ -35,7 +35,7 @@ namespace TaskManager_api.Services.ProjectUsers
             {
                 ProjectId = projectId,
                 UserId = dto.UserId,
-                Role = dto.Role,
+                Role = "member",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -71,7 +71,17 @@ namespace TaskManager_api.Services.ProjectUsers
             await _projectUserRepo.SaveChangesAsync();
             return true;
         }
-        
+        public async Task<bool> CheckUserAccessAsync(int userId, int projectId)
+        {
+            return await _projectUserRepo.UserHasProjectAsync(userId, projectId);
+        }
+
+        public async Task<bool> IsUserPMAsync(int userId, int projectId)
+        {
+            var role = await _projectUserRepo.GetUserRoleInProjectAsync(userId, projectId);
+            return role?.ToLower() == "pm";
+        }
+
 
     }
 

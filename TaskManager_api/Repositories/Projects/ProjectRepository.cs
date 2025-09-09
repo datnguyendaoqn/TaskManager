@@ -26,6 +26,8 @@ namespace TaskManager_api.Repositories.Projects
         {
             return await _context.Projects
                 .Where(p => p.ProjectUsers.Any(u => u.UserId == userId))
+                .Include(p=>p.ProjectUsers)
+                .ThenInclude(u=>u.User)
                 .ToListAsync();
         }   
 
