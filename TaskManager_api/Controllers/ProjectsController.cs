@@ -10,6 +10,7 @@ namespace TaskManager_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectService _service;
@@ -27,7 +28,7 @@ namespace TaskManager_api.Controllers
         /// <param name="dto">Dữ liệu project</param>
         /// <returns>Project vừa tạo</returns>
         [HttpPost]
-        [Authorize]
+        
         public async Task<IActionResult> Create([FromBody] ProjectCreateDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -39,7 +40,6 @@ namespace TaskManager_api.Controllers
         /// Lấy danh sách project của user hiện tại
         /// </summary>
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetUserProjects()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -51,7 +51,6 @@ namespace TaskManager_api.Controllers
         /// Lấy thông tin project theo ID
         /// </summary>
         [HttpGet("{projectId}")]
-        [Authorize]
         public async Task<IActionResult> GetById(int projectId)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -64,7 +63,6 @@ namespace TaskManager_api.Controllers
         /// Cập nhật thông tin project (partial update)
         /// </summary>
         [HttpPatch("{projectId}")]
-        [Authorize]
         public async Task<IActionResult> Update(int projectId, [FromBody] ProjectUpdateDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -77,7 +75,6 @@ namespace TaskManager_api.Controllers
         /// Xóa project
         /// </summary>
         [HttpDelete("{projectId}")]
-        [Authorize]
         public async Task<IActionResult> Delete(int projectId)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -90,7 +87,6 @@ namespace TaskManager_api.Controllers
         /// Thêm user vào project
         /// </summary>
         [HttpPost("{projectId}/users")]
-        [Authorize]
         public async Task<IActionResult> AddUser(int projectId, [FromBody] ProjectUserAddDTO dto)
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -103,7 +99,6 @@ namespace TaskManager_api.Controllers
         /// Xóa user khỏi project
         /// </summary>
         [HttpDelete("{projectId}/users/{userId}")]
-        [Authorize]
         public async Task<IActionResult> RemoveUser(int projectId, int userId)
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

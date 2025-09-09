@@ -11,6 +11,7 @@ namespace TaskManager_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
@@ -25,7 +26,6 @@ namespace TaskManager_api.Controllers
         /// Lấy thông tin user
         /// </summary>
         [HttpGet("profile")]
-        [Authorize]
         public async Task<IActionResult> GetProfile()
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -38,7 +38,6 @@ namespace TaskManager_api.Controllers
         /// Cập nhật thông tin user
         /// </summary>
         [HttpPatch("profile")]
-        [Authorize]
         public async Task<IActionResult> UpdateProfile(UserUpdateDto dto)
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -49,7 +48,6 @@ namespace TaskManager_api.Controllers
         /// Cập nhật mật khấu
         /// </summary>
         [HttpPatch("change-password")]
-        [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO dto)
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

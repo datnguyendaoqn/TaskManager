@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManager_api.DTOs.Task;
 using TaskManager_api.Services.Tasks;
@@ -7,6 +8,7 @@ namespace TaskManager_api.Controllers
 {
     [ApiController]
     [Route("api")]
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _service;

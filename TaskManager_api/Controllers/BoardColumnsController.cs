@@ -7,10 +7,11 @@ using TaskManager_api.Services.BoardColumns;
 namespace TaskManager_api.Controllers
 {
     [ApiController]
-[Route("api/boards/{boardId}/columns")]
-[Authorize]
-public class BoardColumnsController : ControllerBase
-{
+    [Route("api/boards/{boardId}/columns")]
+    [Authorize()]
+    
+    public class BoardColumnsController : ControllerBase
+    {
         private readonly IBoardColumnService _columnService;
 
         public BoardColumnsController(IBoardColumnService columnService)
@@ -23,6 +24,7 @@ public class BoardColumnsController : ControllerBase
         [HttpGet]
         public async Task<IActionResult> GetColumn(int boardId)
         {
+            
             int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var columns = await _columnService.GetColumnAsync(boardId,currentUserId);
             return Ok(columns);
@@ -64,45 +66,45 @@ public class BoardColumnsController : ControllerBase
         /// Archive column (ẩn đi, không xóa hẳn)
         /// </summary>
         [HttpPatch("{columnId}/archive")]
-    public async Task<IActionResult> ArchiveColumn(int columnId)
-    {
-            int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var success = await _columnService.ArchiveColumnAsync(columnId, currentUserId);
+        public async Task<IActionResult> ArchiveColumn(int columnId)
+        {
+                int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var success = await _columnService.ArchiveColumnAsync(columnId, currentUserId);
+                if (!success) return NotFound();
+                return NoContent();
+        }
+            /// <summary>
+            /// Unarchive column (khôi phục lại)
+            /// </summary>
+            [HttpPatch("{columnId}/unarchive")]
+        public async Task<IActionResult> UnarchiveColumn(int columnId)
+        {
+                int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var success = await _columnService.UnarchiveColumnAsync(columnId, currentUserId);
             if (!success) return NotFound();
             return NoContent();
-    }
-        /// <summary>
-        /// Unarchive column (khôi phục lại)
-        /// </summary>
-        [HttpPatch("{columnId}/unarchive")]
-    public async Task<IActionResult> UnarchiveColumn(int columnId)
-    {
-            int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var success = await _columnService.UnarchiveColumnAsync(columnId, currentUserId);
-        if (!success) return NotFound();
-        return NoContent();
-    }
-        /// <summary>
-        /// Xóa hẳn column (delete permanently)       
-        /// </summary>
-        [HttpDelete("{columnId}")]
-    public async Task<IActionResult> DeleteColumnPermanently(int columnId)
-    {
-            int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var success = await _columnService.DeleteColumnPermanentlyAsync(columnId, currentUserId);
-        if (!success) return NotFound();
-        return NoContent();
-    }
-        /// <summary>
-        /// Lấy thông tin các column đã archived
-        /// </summary>
+        }
+            /// <summary>
+            /// Xóa hẳn column (delete permanently)       
+            /// </summary>
+            [HttpDelete("{columnId}")]
+        public async Task<IActionResult> DeleteColumnPermanently(int columnId)
+        {
+                int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var success = await _columnService.DeleteColumnPermanentlyAsync(columnId, currentUserId);
+            if (!success) return NotFound();
+            return NoContent();
+        }
+            /// <summary>
+            /// Lấy thông tin các column đã archived
+            /// </summary>
        
-        [HttpGet("archived")]
-    public async Task<IActionResult> GetArchivedColumns(int boardId)
-    {
-            int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var columns = await _columnService.GetArchivedColumnsAsync(boardId, currentUserId);
-             return Ok(columns);
+            [HttpGet("archived")]
+        public async Task<IActionResult> GetArchivedColumns(int boardId)
+        {
+                int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var columns = await _columnService.GetArchivedColumnsAsync(boardId, currentUserId);
+                 return Ok(columns);
+        }
     }
-}
 }
