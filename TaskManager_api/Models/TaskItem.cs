@@ -12,7 +12,7 @@ namespace TaskManager_api.Models
 
         public Board Board { get; set; } = null!;
 
-        public int ColumnId { get; set; }              // nullable (chỉ khi type=kanban)
+        public int ColumnId { get; set; }             
         [JsonIgnore]
 
         public BoardColumn? Column { get; set; }
@@ -20,7 +20,7 @@ namespace TaskManager_api.Models
 
         public int? AssignedTo { get; set; }
         [JsonIgnore]
-                        // nullable
+                       
         public User? AssignedToUser { get; set; }
         [JsonIgnore]
 
@@ -34,16 +34,13 @@ namespace TaskManager_api.Models
         public string Title { get; set; } = null!;
 
         public string? Description { get; set; }
-
-  
-       
-
         [MaxLength(50)]
         public string? Priority { get; set; }           // low|medium|high (optional)
-
+        public bool IsArchived { get; set; } = false;
+        public int Position { get; set; }
         public DateTime? DueDate { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
         // Navigation
         [JsonIgnore]

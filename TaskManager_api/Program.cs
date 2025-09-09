@@ -12,12 +12,14 @@ using TaskManager_api.Repositories.BoardColumns;
 using TaskManager_api.Repositories.Boards;
 using TaskManager_api.Repositories.Projects;
 using TaskManager_api.Repositories.ProjectUsers;
+using TaskManager_api.Repositories.Tasks;
 using TaskManager_api.Repositories.Users;
 using TaskManager_api.Services.Auth;
 using TaskManager_api.Services.BoardColumns;
 using TaskManager_api.Services.Boards;
 using TaskManager_api.Services.Projects;
 using TaskManager_api.Services.ProjectUsers;
+using TaskManager_api.Services.Tasks;
 using TaskManager_api.Services.Users;
 
 namespace TaskManager_api
@@ -59,6 +61,8 @@ namespace TaskManager_api
             builder.Services.AddScoped<IBoardService, BoardService>();
             builder.Services.AddScoped<IBoardColumnRepository, BoardColumnRepository>();
             builder.Services.AddScoped<IBoardColumnService, BoardColumnService>();
+            builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+            builder.Services.AddScoped<ITaskService, TaskService>();
 
             // Jwt Helper DI (Singleton)
             builder.Services.AddSingleton<JwtHelper>(new JwtHelper(
