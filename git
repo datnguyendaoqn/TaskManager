@@ -1,0 +1,8 @@
+[33m255c9c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mwork1.1[m[33m, [m[1;32mwork1[m[33m)[m fix(jwt): standardize JWT claims to RFC 7519 (iat as Unix timestamp)
+[33m838965b[m[33m ([m[1;31morigin/work1[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix logic move column
+[33m69e06ad[m feat(tasks): implement TaskItem API with CRUD, move, archive; add access checks and API summaries
+[33m012febe[m create project , board , boardcolumn api
+[33m2c2906b[m[33m ([m[1;32mwork2[m[33m)[m create User api
+[33ma4e302d[m setup EF + database
+[33m5598e7c[m Add project files.
+[33m0227e0c[m Add .gitattributes and .gitignore.

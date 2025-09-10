@@ -10,7 +10,7 @@ using TaskManager_api.Services.Users;
 namespace TaskManager_api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     [Authorize]
     public class UserController : ControllerBase
     {
@@ -25,7 +25,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Lấy thông tin user
         /// </summary>
-        [HttpGet("profile")]
+        [HttpGet("users/profile")]
         public async Task<IActionResult> GetProfile()
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -37,7 +37,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Cập nhật thông tin user
         /// </summary>
-        [HttpPatch("profile")]
+        [HttpPatch("users/profile")]
         public async Task<IActionResult> UpdateProfile(UserUpdateDto dto)
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -47,7 +47,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Cập nhật mật khấu
         /// </summary>
-        [HttpPatch("change-password")]
+        [HttpPatch("users/change-password")]
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO dto)
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -57,7 +57,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Xóa user
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("users")]
         public async Task<ActionResult> Delete()
         {
             int id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

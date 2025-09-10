@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.IdentityModel.Tokens;
 using TaskManager_api.Data;
 using TaskManager_api.DTOs.BoardColumn;
 using TaskManager_api.Models;
@@ -43,6 +44,8 @@ namespace TaskManager_api.Services.BoardColumns
             var board = await _boardRepository.GetByIdAsync(boardId);
             if (!await _projectUserRepo.UserHasProjectAsync(currentUser, board.ProjectId))
                 throw new Exception("User has no access to this project");
+            if (dto.Name.IsNullOrEmpty())
+                throw new Exception("column must has name");
             // Lấy max position hiện tại trong board
             var maxPosition = await _columnRepo.GetMaxPositionAsync(boardId);
 
@@ -68,12 +71,11 @@ namespace TaskManager_api.Services.BoardColumns
 
         public async Task<bool> UpdateColumnAsync(int columnId, BoardColumnCreateDTO dto,int currentUser)
         {
-            
             var column = await _columnRepo.GetByIdAsync(columnId);
             if (column == null) return false;
             if (!await _projectUserRepo.UserHasProjectAsync(currentUser, column.Board.ProjectId))
                 throw new Exception("User has no access to this project");
-
+          
             column.Name = dto.Name;
             column.UpdatedAt = DateTime.UtcNow;
             _context.BoardColumns.Update(column);

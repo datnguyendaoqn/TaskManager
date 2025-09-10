@@ -7,7 +7,7 @@ using TaskManager_api.Services.BoardColumns;
 namespace TaskManager_api.Controllers
 {
     [ApiController]
-    [Route("api/boards/{boardId}/columns")]
+    [Route("api")]
     [Authorize()]
     
     public class BoardColumnsController : ControllerBase
@@ -21,10 +21,9 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// lấy các column trong 1 board
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetColumn(int boardId)
+        [HttpGet("boards/{boardId}/columns")]
+        public async Task<IActionResult> GetColumn([FromRoute]int boardId)
         {
-            
             int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var columns = await _columnService.GetColumnAsync(boardId,currentUserId);
             return Ok(columns);
@@ -32,8 +31,8 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Tạo column mới trong 1 board
         /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> AddColumn(int boardId, [FromBody] BoardColumnCreateDTO dto)
+        [HttpPost("boards/{boardId}/columns")]
+        public async Task<IActionResult> AddColumn([FromRoute]int boardId, [FromBody] BoardColumnCreateDTO dto)
         {
                 int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var column = await _columnService.AddColumnAsync(boardId, dto,currentUserId);
@@ -42,8 +41,8 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Cập nhật column
         /// </summary>
-            [HttpPatch("{columnId}")]
-            public async Task<IActionResult> UpdateColumn(int columnId, [FromBody] BoardColumnCreateDTO dto)
+            [HttpPatch("columns/{columnId}")]
+            public async Task<IActionResult> UpdateColumn([FromRoute]int columnId, [FromBody] BoardColumnCreateDTO dto)
             {
                 int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var success = await _columnService.UpdateColumnAsync(columnId, dto, currentUserId);
@@ -53,8 +52,8 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Move column
         /// </summary>
-        [HttpPatch("{columnId}/move")]
-        public async Task<IActionResult> MoveColumn(int columnId,[FromBody] BoardColumnMoveDTO dto)
+        [HttpPatch("columns/{columnId}/move")]
+        public async Task<IActionResult> MoveColumn([FromRoute] int columnId,[FromBody] BoardColumnMoveDTO dto)
         {
             int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var success = await _columnService.MoveColumnAsync(columnId, dto.position, currentUserId);
@@ -65,8 +64,8 @@ namespace TaskManager_api.Controllers
         /// <summary>       
         /// Archive column (ẩn đi, không xóa hẳn)
         /// </summary>
-        [HttpPatch("{columnId}/archive")]
-        public async Task<IActionResult> ArchiveColumn(int columnId)
+        [HttpPatch("columns/{columnId}/archive")]
+        public async Task<IActionResult> ArchiveColumn([FromRoute] int columnId)
         {
                 int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var success = await _columnService.ArchiveColumnAsync(columnId, currentUserId);
@@ -76,8 +75,8 @@ namespace TaskManager_api.Controllers
             /// <summary>
             /// Unarchive column (khôi phục lại)
             /// </summary>
-            [HttpPatch("{columnId}/unarchive")]
-        public async Task<IActionResult> UnarchiveColumn(int columnId)
+        [HttpPatch("columns/{columnId}/unarchive")]
+        public async Task<IActionResult> UnarchiveColumn([FromRoute] int columnId)
         {
                 int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var success = await _columnService.UnarchiveColumnAsync(columnId, currentUserId);
@@ -87,11 +86,11 @@ namespace TaskManager_api.Controllers
             /// <summary>
             /// Xóa hẳn column (delete permanently)       
             /// </summary>
-            [HttpDelete("{columnId}")]
-        public async Task<IActionResult> DeleteColumnPermanently(int columnId)
+        [HttpDelete("columns/{columnId}")]
+        public async Task<IActionResult> DeleteColumnPermanently([FromRoute] int columnId)
         {
-                int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var success = await _columnService.DeleteColumnPermanentlyAsync(columnId, currentUserId);
+            int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var success = await _columnService.DeleteColumnPermanentlyAsync(columnId, currentUserId);
             if (!success) return NotFound();
             return NoContent();
         }
@@ -99,8 +98,8 @@ namespace TaskManager_api.Controllers
             /// Lấy thông tin các column đã archived
             /// </summary>
        
-            [HttpGet("archived")]
-        public async Task<IActionResult> GetArchivedColumns(int boardId)
+        [HttpGet("boards/{boardId}/columns/archived")]
+        public async Task<IActionResult> GetArchivedColumns([FromRoute] int boardId)
         {
                 int currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var columns = await _columnService.GetArchivedColumnsAsync(boardId, currentUserId);
