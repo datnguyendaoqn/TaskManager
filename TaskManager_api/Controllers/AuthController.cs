@@ -5,7 +5,7 @@ using TaskManager_api.Services.Auth;
 namespace TaskManager_api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -17,7 +17,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Đăng ký 
         /// </summary>
-        [HttpPost("register")]
+        [HttpPost("auth/register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
             if (!ModelState.IsValid)
@@ -35,7 +35,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Đăng nhập
         /// </summary>
-        [HttpPost("login")]
+        [HttpPost("auth/login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
             try
@@ -54,7 +54,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// Tạo mới token JWT - dựa vào refreshtoken
         /// </summary>
-        [HttpPost("refresh")]
+        [HttpPost("auth/refresh")]
         public async Task<IActionResult> Refresh(RefreshTokenDTO dto)
         {
             try
@@ -70,7 +70,7 @@ namespace TaskManager_api.Controllers
         /// <summary>
         /// logout - xóa token JWT
         /// </summary>
-        [HttpPost("logout")]
+        [HttpPost("auth/logout")]
         public async Task<IActionResult> Logout(RefreshTokenDTO dto)
         {
             await _authService.LogoutAsync(dto.Token);

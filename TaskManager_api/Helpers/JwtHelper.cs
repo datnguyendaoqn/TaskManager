@@ -19,9 +19,11 @@ namespace TaskManager_api.Helpers
         {
             var claims = new[]
             {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("role", user.SystemRole),
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.SystemRole)
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
             };
 
             var keyBytes = Encoding.UTF8.GetBytes(_key);
@@ -29,7 +31,7 @@ namespace TaskManager_api.Helpers
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+                expires: DateTimeOffset.UtcNow.UtcDateTime.AddMinutes(expireMinutes),
                 signingCredentials: creds
             );
 

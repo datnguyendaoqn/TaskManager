@@ -21,7 +21,7 @@ namespace TaskManager_api.Services.Projects
         {       
             var project = _mapper.Map<Project>(dto);
             project.CreatedBy = userId;
-            project.CreatedAt = DateTime.Now;
+            project.CreatedAt = DateTime.UtcNow;
             // Add default ProjectUser as PM
             project.ProjectUsers.Add(new ProjectUser
             {
