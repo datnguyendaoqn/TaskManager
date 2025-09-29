@@ -128,6 +128,7 @@ namespace TaskManager_api
             });
 
             var app = builder.Build();
+            app.MapGet("/", () => Results.Redirect("/swagger")); 
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
